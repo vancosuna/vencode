@@ -16,7 +16,7 @@ functions:
       - http: POST /file/upload
     role: UploadRole
     environment:
-      BUCKET: modusland${opt:stage, 'dev'}
+      BUCKET: vens3-second-bucket-${opt:stage, 'dev'}
 
 resources:
   Resources:
