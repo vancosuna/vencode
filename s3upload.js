@@ -10,7 +10,7 @@ module.exports.handle = async (event) => {
       //await s3.putObject({ Bucket: BUCKET, Key: filename, ACL: 'public-read', Body: data }).promise();
       return {
         statusCode: 200,
-        body:  extractFile(event)
+        body:  JSON.stringify(extractFile(event))
       }
 
     //   return {
