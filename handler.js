@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const parseMultipart = require('parse-multipart');
+
  
 const BUCKET = process.env.BUCKET;
  
