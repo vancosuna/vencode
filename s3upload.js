@@ -29,7 +29,7 @@ module.exports.handle = async (event) => {
         response.body = JSON.stringify({ message: "Successfully uploaded file to S3", uploadResult });
     } catch (e) {
         console.error(e);
-        response.body = JSON.stringify({ message: "File failed to upload", errorMessage: e });
+        response.body = JSON.stringify({ message: err.stack })
         response.statusCode = 500;
     }
 
