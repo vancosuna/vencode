@@ -13,12 +13,22 @@ functions:
   hello_world:
     handler: handler.hello
     events:
-      - http: GET /hello/world
+      - http: 
+          method: get 
+          path: /hello
+          request:
+            template:
+              application/json: >
+                {
+                  "name" : "$input.params('name')"
+                }
     role: UploadRole  
   uploader:
     handler: handler.handle
     events:
-      - http: POST /file/upload
+      - http: 
+          method: post
+          path: /file/upload
     role: UploadRole
     environment:
       BUCKET: vens3-second-bucket-${opt:stage, 'dev'}
