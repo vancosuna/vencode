@@ -4,6 +4,28 @@ const parseMultipart = require('parse-multipart');
 const BUCKET = process.env.BUCKET;
  
 const s3 = new AWS.S3();
+
+module.exports.hello = async (event) => {
+    let responseCode = 200;
+    let name = "world";
+    console.log("request: " + JSON.stringify(event));
+    
+    if (event.queryStringParameters && event.queryStringParameters.name) {
+        console.log("Received name: " + event.queryStringParameters.name);
+        name = event.queryStringParameters.name;
+    }
+    
+    let greeting = `Hello ${name}!`;
+     
+    let response = {
+        statusCode: responseCode,
+        body: greeting
+    };
+    
+    console.log("response: " + JSON.stringify(response))
+    return response;
+
+}
  
 module.exports.handle = async (event) => {
   try {

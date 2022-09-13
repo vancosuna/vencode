@@ -10,6 +10,10 @@ provider:
       - 'multipart/form-data'
 
 functions:
+  hello_world:
+    handler: handler.hello
+    events:
+      - http: GET /hello/world
   uploader:
     handler: handler.handle
     events:
