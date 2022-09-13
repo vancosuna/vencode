@@ -1,4 +1,4 @@
-service: vencode-template
+service: vencode
 
 frameworkVersion: '3'
 
