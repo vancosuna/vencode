@@ -16,12 +16,6 @@ functions:
       - http: 
           method: get 
           path: /hello
-          request:
-            template:
-              application/json: >
-                {
-                  "name" : "$input.params('name')"
-                }
     role: UploadRole  
   uploader:
     handler: handler.handle
