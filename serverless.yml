@@ -14,8 +14,12 @@ functions:
     handler: handler.hello
     events:
       - http: 
+          path: /hello/{name}
           method: get 
-          path: /hello
+          request: 
+            parameters:
+              paths:
+                name: true
     role: UploadRole  
   uploader:
     handler: handler.handle
