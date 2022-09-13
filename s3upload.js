@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const multipart = require('aws-lambda-multipart-parser');
 
 const BUCKET = process.env.BUCKET;
+const s3 = new AWS.S3();
 
 module.exports.handle = async (event) => {
     try {
