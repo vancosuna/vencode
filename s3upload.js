@@ -6,7 +6,7 @@ const s3 = new AWS.S3();
 
 module.exports.handle = async (event) => {
     try {
-    //   const { filename, data } = extractFile(event)
+      const { filename, data } = extractFile(event)
       await s3.putObject({ Bucket: BUCKET, Key: filename, ACL: 'public-read', Body: data }).promise();
 
       return {
