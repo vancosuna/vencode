@@ -22,12 +22,11 @@ functions:
                 name: true
     role: UploadRole  
   uploader:
-    handler: handler.handle
+    handler: s3upload.handle
     events:
       - http: 
           method: post
           path: /file/upload
-          integration: LAMBDA
     role: UploadRole
     environment:
       BUCKET: vens3-second-bucket-${opt:stage, 'dev'}
