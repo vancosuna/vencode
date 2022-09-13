@@ -28,8 +28,8 @@ module.exports.handle = async (event) => {
     // spotText === true response file will be Buffer and spotText === false: String
     spotText = true;
     const result = multipart.parse(event, spotText) 
-    const filename = result.filename;
-    const data = result.data;
+    const filename = result.file.filename;
+    const data = result.file.content.data;
 
     return {
       filename,
