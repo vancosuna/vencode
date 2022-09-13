@@ -1,12 +1,18 @@
 {
   "service": {
-    "service": "vencode-template",
+    "service": "vencode",
     "serviceObject": {
-      "name": "vencode-template"
+      "name": "vencode"
     },
     "provider": {
       "name": "aws",
       "runtime": "nodejs14.x",
+      "lambdaHashingVersion": "20201221",
+      "apiGateway": {
+        "binaryMediaTypes": [
+          "multipart/form-data"
+        ]
+      },
       "stage": "dev",
       "region": "us-east-1",
       "versionFunctions": true,
@@ -83,13 +89,197 @@
               }
             }
           },
-          "HelloLogGroup": {
+          "UploaderLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/vencode-template-dev-hello"
+              "LogGroupName": "/aws/lambda/vencode-dev-uploader"
             }
           },
-          "IamRoleLambdaExecution": {
+          "UploaderLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/vencode/dev/1663039291753-2022-09-13T03:21:31.753Z/vencode.zip"
+              },
+              "Handler": "handler.handle",
+              "Runtime": "nodejs14.x",
+              "FunctionName": "vencode-dev-uploader",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "BUCKET": "moduslanddev"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "UploadRole",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "UploaderLogGroup",
+              "UploadRole"
+            ]
+          },
+          "UploaderLambdaVersionTGaZoK0Yd0dSEB2DUjyEgZvDOixW6JmPBrjQ5ZKjQ": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "UploaderLambdaFunction"
+              },
+              "CodeSha256": "tREfBrN6Sa9S0b+f+BnhQE2Bgfnvz68dWMgWPJvayYw="
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "dev-vencode",
+              "BinaryMediaTypes": [
+                "multipart/form-data"
+              ],
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              },
+              "Policy": ""
+            }
+          },
+          "ApiGatewayResourceFile": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "file",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceFileUpload": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Ref": "ApiGatewayResourceFile"
+              },
+              "PathPart": "upload",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodFileUploadPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceFileUpload"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "UploaderLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "UploaderLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1663039289876": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodFileUploadPost"
+            ]
+          },
+          "UploaderLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "UploaderLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "VenditionBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "vens3-second-bucket-dev"
+            }
+          },
+          "UploadRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
               "AssumeRolePolicyDocument": {
@@ -102,103 +292,58 @@
                         "lambda.amazonaws.com"
                       ]
                     },
-                    "Action": [
-                      "sts:AssumeRole"
-                    ]
+                    "Action": "sts:AssumeRole"
                   }
                 ]
               },
               "Policies": [
                 {
-                  "PolicyName": {
-                    "Fn::Join": [
-                      "-",
-                      [
-                        "vencode-template",
-                        "dev",
-                        "lambda"
-                      ]
-                    ]
-                  },
+                  "PolicyName": "upload-policy",
                   "PolicyDocument": {
                     "Version": "2012-10-17",
                     "Statement": [
                       {
                         "Effect": "Allow",
                         "Action": [
-                          "logs:CreateLogStream",
-                          "logs:CreateLogGroup"
+                          "s3:PutObject",
+                          "s3:PutObjectAcl"
                         ],
-                        "Resource": [
-                          {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/vencode-template-dev*:*"
-                          }
-                        ]
+                        "Resource": {
+                          "Fn::Sub": [
+                            "arn:aws:s3:::${BucketName}/*",
+                            {
+                              "BucketName": {
+                                "Ref": "VenditionBucket"
+                              }
+                            }
+                          ]
+                        }
                       },
                       {
                         "Effect": "Allow",
                         "Action": [
+                          "logs:CreateLogGroup",
+                          "logs:CreateLogStream",
                           "logs:PutLogEvents"
                         ],
-                        "Resource": [
-                          {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/vencode-template-dev*:*:*"
-                          }
-                        ]
+                        "Resource": {
+                          "Fn::Sub": [
+                            "arn:aws:logs:${Region}:${AccountId}:log-group:/aws/lambda/*:*:*",
+                            {
+                              "Region": {
+                                "Ref": "AWS::Region"
+                              },
+                              "AccountId": {
+                                "Ref": "AWS::AccountId"
+                              }
+                            }
+                          ]
+                        }
                       }
                     ]
                   }
                 }
-              ],
-              "Path": "/",
-              "RoleName": {
-                "Fn::Join": [
-                  "-",
-                  [
-                    "vencode-template",
-                    "dev",
-                    {
-                      "Ref": "AWS::Region"
-                    },
-                    "lambdaRole"
-                  ]
-                ]
-              }
-            }
-          },
-          "HelloLambdaFunction": {
-            "Type": "AWS::Lambda::Function",
-            "Properties": {
-              "Code": {
-                "S3Bucket": {
-                  "Ref": "ServerlessDeploymentBucket"
-                },
-                "S3Key": "serverless/vencode-template/dev/1663037995099-2022-09-13T02:59:55.099Z/vencode-template.zip"
-              },
-              "Handler": "handler.hello",
-              "Runtime": "nodejs14.x",
-              "FunctionName": "vencode-template-dev-hello",
-              "MemorySize": 1024,
-              "Timeout": 6,
-              "Role": {
-                "Fn::GetAtt": [
-                  "IamRoleLambdaExecution",
-                  "Arn"
-                ]
-              }
-            },
-            "DependsOn": [
-              "HelloLogGroup"
-            ]
-          },
-          "HelloLambdaVersionY01YTt19zoDk9ipLHjZOH9hUVjScnnvD7PtnwBBW3ac": {
-            "Type": "AWS::Lambda::Version",
-            "DeletionPolicy": "Retain",
-            "Properties": {
-              "FunctionName": {
-                "Ref": "HelloLambdaFunction"
-              },
-              "CodeSha256": "JmjJYNsY10bzJIpqKciS8skCx8DXOBiHAuqs9QiOYws="
+              ]
             }
           }
         },
@@ -208,16 +353,42 @@
               "Ref": "ServerlessDeploymentBucket"
             },
             "Export": {
-              "Name": "sls-vencode-template-dev-ServerlessDeploymentBucketName"
+              "Name": "sls-vencode-dev-ServerlessDeploymentBucketName"
             }
           },
-          "HelloLambdaFunctionQualifiedArn": {
+          "UploaderLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "HelloLambdaVersionY01YTt19zoDk9ipLHjZOH9hUVjScnnvD7PtnwBBW3ac"
+              "Ref": "UploaderLambdaVersionTGaZoK0Yd0dSEB2DUjyEgZvDOixW6JmPBrjQ5ZKjQ"
             },
             "Export": {
-              "Name": "sls-vencode-template-dev-HelloLambdaFunctionQualifiedArn"
+              "Name": "sls-vencode-dev-UploaderLambdaFunctionQualifiedArn"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-vencode-dev-ServiceEndpoint"
             }
           }
         }
@@ -308,36 +479,125 @@
     },
     "pluginsData": {},
     "functions": {
-      "hello": {
-        "handler": "handler.hello",
-        "events": [],
-        "name": "vencode-template-dev-hello",
+      "uploader": {
+        "handler": "handler.handle",
+        "events": [
+          {
+            "http": "POST /file/upload"
+          }
+        ],
+        "role": "UploadRole",
+        "environment": {
+          "BUCKET": "moduslanddev"
+        },
+        "name": "vencode-dev-uploader",
         "package": {},
         "memory": 1024,
         "timeout": 6,
         "runtime": "nodejs14.x",
         "vpc": {},
-        "versionLogicalId": "HelloLambdaVersionY01YTt19zoDk9ipLHjZOH9hUVjScnnvD7PtnwBBW3ac"
+        "versionLogicalId": "UploaderLambdaVersionTGaZoK0Yd0dSEB2DUjyEgZvDOixW6JmPBrjQ5ZKjQ"
       }
+    },
+    "resources": {
+      "Resources": {
+        "VenditionBucket": {
+          "Type": "AWS::S3::Bucket",
+          "Properties": {
+            "BucketName": "vens3-second-bucket-dev"
+          }
+        },
+        "UploadRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": "upload-policy",
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "s3:PutObject",
+                        "s3:PutObjectAcl"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": [
+                          "arn:aws:s3:::${BucketName}/*",
+                          {
+                            "BucketName": {
+                              "Ref": "VenditionBucket"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": {
+                        "Fn::Sub": [
+                          "arn:aws:logs:${Region}:${AccountId}:log-group:/aws/lambda/*:*:*",
+                          {
+                            "Region": {
+                              "Ref": "AWS::Region"
+                            },
+                            "AccountId": {
+                              "Ref": "AWS::AccountId"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Outputs": {}
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
     "initialServerlessConfig": {
-      "service": "vencode-template",
+      "service": "vencode",
       "frameworkVersion": "3",
       "provider": {
         "$ref": "$[\"service\"][\"provider\"]"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
+      },
+      "resources": {
+        "$ref": "$[\"service\"][\"resources\"]"
       }
     },
     "layers": {},
     "isDashboardMonitoringPreconfigured": false,
-    "artifact": "/Users/cosuna/Code/vendition/repos/vencode/.serverless/vencode-template.zip"
+    "artifact": "/Users/cosuna/Code/vendition/repos/vencode/.serverless/vencode.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/vencode-template/dev/1663037995099-2022-09-13T02:59:55.099Z",
-    "artifact": "vencode-template.zip"
+    "artifactDirectoryName": "serverless/vencode/dev/1663039291753-2022-09-13T03:21:31.753Z",
+    "artifact": "vencode.zip"
   }
 }
