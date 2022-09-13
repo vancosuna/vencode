@@ -26,6 +26,7 @@ module.exports.handle = async (event) => {
 
   function extractFile(event) {
     // spotText === true response file will be Buffer and spotText === false: String
+    spotText = true;
     const result = multipart.parse(event, spotText) 
     const filename = result.filename;
     const data = result.data;
