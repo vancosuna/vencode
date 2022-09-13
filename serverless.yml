@@ -11,8 +11,13 @@ provider:
       - 'multipart/form-data'
 
 functions:
-  hello:
-    handler: handler.hello
+  uploader:
+    handler: handler.handle
+    events:
+      - http: POST /file/upload
+    role: UploadRole
+    environment:
+      BUCKET: modusland${opt:stage, 'dev'}
 
 resources:
   Resources:
