@@ -7,12 +7,12 @@ const s3 = new AWS.S3();
 
 module.exports.hello = async (event) => {
     let responseCode = 200;
-    let name = "world";
+    let name = "world...";
     console.log("request: " + JSON.stringify(event));
     
-    if (event.queryStringParameters && event.queryStringParameters.name) {
-        console.log("Received name: " + event.queryStringParameters.name);
-        name = event.queryStringParameters.name;
+    if (event['pathParameters'] && event['pathParameters']['name']) {
+        console.log("Received name: " + event['pathParameters']['name']);
+        name = event['pathParameters']['name'];
     }
     
     let greeting = `Hello ${name}!`;
