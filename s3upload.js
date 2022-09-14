@@ -24,7 +24,7 @@ module.exports.handle = async (event) => {
             decodedFile =  bodyFile;   
         }
         const newFileName = `${new Date().toISOString()}.jpeg`;
-        const fullFileName = `https://${BUCKET}.s3.amazonaws.com/${newFileName}`;
+        const fullFileName = `https://${BUCKET_NAME}.s3.amazonaws.com/${newFileName}`;
 
         const params = {
             Bucket: BUCKET_NAME,
