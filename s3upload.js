@@ -14,12 +14,21 @@ module.exports.handle = async (event) => {
     };
 
     try {
-        const parsedBody = JSON.parse(event.body);
-        const base64File = parsedBody.file;
-        const decodedFile = Buffer.from(base64File.replace(/^data:image\/\w+;base64,/, ""), "base64");
+        console.log(event.body);
+        //const parsedBody = JSON.parse(event.body);
+        const bodyFile = event.body;
+        let decodedFile = "";
+        if (event.isBase64Encoded) {
+            decodedFile = Buffer.from(bodyFile.replace(/^data:image\/\w+;base64,/, ""), "base64");
+        } else {
+            decodedFile =  bodyFile;   
+        }
+        const newFileName = `${new Date().toISOString()}.jpeg`;
+        const fullFileName = `https://${BUCKET}.s3.amazonaws.com/${newFileName}`;
+
         const params = {
             Bucket: BUCKET_NAME,
-            Key: `images/${new Date().toISOString()}.jpeg`,
+            Key: newFileName,
             Body: decodedFile,
             ContentType: "image/jpeg",
         };
